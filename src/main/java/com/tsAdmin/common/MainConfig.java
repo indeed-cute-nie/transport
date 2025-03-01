@@ -6,7 +6,9 @@ import com.jfinal.render.ViewType;
 import com.jfinal.template.Engine;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
 import com.jfinal.kit.PropKit;
-import com.tsAdmin.controller.MainController;
+
+import com.tsAdmin.control.DataController;
+import com.tsAdmin.control.IndexController;
 
 public class MainConfig extends JFinalConfig
 {
@@ -16,10 +18,10 @@ public class MainConfig extends JFinalConfig
     @Override
     public void configConstant(Constants me)
     {
-        PropKit.use(".config");
+        PropKit.use("config.properties");
         me.setDevMode(PropKit.getBoolean("devMode", false));
-        me.setError404View("/common/404.html");
-        me.setError500View("/common/500.html");
+        //me.setError404View("/common/404.html");
+        //me.setError500View("/common/500.html");
         me.setViewType(ViewType.FREE_MARKER);
     }
 
@@ -29,7 +31,8 @@ public class MainConfig extends JFinalConfig
     @Override
     public void configRoute(Routes me)
     {
-        me.add("/", MainController.class, "/");
+        me.add("/", IndexController.class);
+        me.add("/data", DataController.class);
     }
 
     /**
