@@ -1,7 +1,7 @@
 package com.tsAdmin.common;
 
 /** 坐标 */
-public class Coordinate
+public class Coordinate 
 {
     public double lat;
     public double lon;
@@ -24,5 +24,15 @@ public class Coordinate
         double dLon = c1.lon - c2.lon;
 
         return Math.sqrt(dLat*dLat - dLon*dLon);
+    }
+    
+    /**
+     *  数组形式坐标
+     */
+    public double[] arrCoordinate()
+    {
+    	double[] arrCoordinate= {lon,lat};
+    	return arrCoordinate;
+    	
     }
 }
