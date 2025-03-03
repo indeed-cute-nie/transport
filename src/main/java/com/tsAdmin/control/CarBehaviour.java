@@ -5,7 +5,9 @@ import java.util.Random;
 import com.tsAdmin.common.Coordinate;
 import com.tsAdmin.model.Car;
 import com.tsAdmin.model.Demand;
+import com.tsAdmin.model.DemandSave;
 import com.tsAdmin.model.Car.CarState;
+import com.tsAdmin.model.CarCompany;
 
 public class CarBehaviour
 {
@@ -54,8 +56,8 @@ public class CarBehaviour
         switch (car.getState())
         {
             case ORDER_TAKEN:
-                if      (randomNumber < 90) nextState = CarState.LOADING;
-                else if (randomNumber < 95) nextState = CarState.ORDER_TAKEN;
+                if      (randomNumber < 95)	nextState = CarState.LOADING;
+                else if (randomNumber < 98) nextState = CarState.ORDER_TAKEN;
                 else                        nextState = CarState.FREEZE;
                 break;
 
@@ -73,9 +75,9 @@ public class CarBehaviour
                 break;
 
             case UNLOADING:
-                if      (randomNumber < 58) nextState = CarState.FREEZE;
-                else if (randomNumber < 98) nextState = CarState.AVAILABLE;
-                else                        nextState = CarState.LOADING;
+            	if(car.getPrevState()==CarState.LOADING)nextState = CarState.LOADING;
+            	else if (randomNumber < 97) nextState = CarState.AVAILABLE;
+                else 						nextState = CarState.FREEZE;
                 break;
 
             case FREEZE:
@@ -118,11 +120,48 @@ public class CarBehaviour
                 break;
         }
 
-        if (car.getPrevState() == CarState.ORDER_TAKEN && car.getState() == CarState.LOADING)
-            car.setPosition(car.getDemand().getOrigin());
-        else if (car.getPrevState() == CarState.TRANSPORTING && car.getState() == CarState.UNLOADING)
+        if (car.getState() == CarState.ORDER_TAKEN && nextState == CarState.LOADING)
+            {
+        		DBManager.updateCarPos(car, CarCompany.cars.indexOf(car));
+        		car.setPosition(car.getDemand().getOrigin());
+            }
+        else if (car.getState() == CarState.TRANSPORTING && nextState == CarState.UNLOADING)
+        {
+       		DBManager.updateCarPos(car, CarCompany.cars.indexOf(car));
             car.setPosition(car.getDemand().getDestination());
+        }
+        else if(car.getState() == CarState.UNLOADING&& nextState != CarState.LOADING) 
+        {	//任务完成，删除需求
+        	DBManager.deleteDemand(car.getDemand());
+        	DemandSave.demands.remove(DemandSave.demands.indexOf(car.getDemand()));
+        	DBManager.incrementCountInDb();
+        	DBManager.updateCarDemandIDX(car, CarCompany.cars.indexOf(car));
+        }
 
         car.setState(nextState);
+        DBManager.updateCarState(car, CarCompany.cars.indexOf(car));
+    }
+    
+    
+    /**
+     * 状态转换后获取任务时间
+     */
+    public int getBehaviourTime() 
+    {
+        switch (car.getState()) 
+        {
+        case ORDER_TAKEN:
+        	return (int)Coordinate.distance(car.getPosition(), car.getDemand().getOrigin())/1000;	
+        case TRANSPORTING:
+        	return (int)Coordinate.distance(car.getDemand().getOrigin(),car.getDemand().getDestination())/1000;
+        case LOADING:
+        	return (int)1.2*car.getLoad();
+        case UNLOADING:
+        	return (int)0.9*car.getLoad();
+        case FREEZE:
+        	return 30;
+        default:
+        	return 0;
+        }
     }
 }
